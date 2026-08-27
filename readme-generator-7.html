@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>README Boarding — Profile README Generator</title>
+<meta name="description" content="Generate a polished GitHub profile README from your handle — live stats, tech badges, typing effects, and contribution snake animation, previewed instantly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<style>
+  :root{
+    --amber:#E8A33D; --teal:#4FA69A; --rust:#C1502E; --dark-text:#10201B;
+  }
+  body[data-theme="dark"]{
+    --bg:#10201B; --text:#ECE7D8; --graphite:#9AA39C; --hairline:rgba(255,255,255,0.1);
+    --glass-1:rgba(255,255,255,0.02); --glass-2:rgba(255,255,255,0.04);
+    --glass-3:rgba(255,255,255,0.05); --glass-4:rgba(255,255,255,0.12);
+  }
+  body[data-theme="light"]{
+    --bg:#F6F3EA; --text:#1B2420; --graphite:#6B7168; --hairline:rgba(0,0,0,0.12);
+    --glass-1:rgba(0,0,0,0.02); --glass-2:rgba(0,0,0,0.035);
+    --glass-3:rgba(0,0,0,0.045); --glass-4:rgba(0,0,0,0.1);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; height:100%; font-family:'Inter',sans-serif; background:var(--bg); color:var(--text);
+    transition: background-color 0.45s ease, color 0.45s ease;}
+
+  header.top{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 20px; border-bottom:1px dashed var(--hairline);
+    transition: border-color 0.45s ease;
+  }
+  header.top .brand{ display:flex; align-items:center; gap:10px; }
+  header.top .brand .mark{
+    width:28px; height:28px; border-radius:6px; background:var(--amber);
+    display:grid; place-items:center; font-family:'IBM Plex Mono',monospace;
+    font-weight:600; color:var(--dark-text); font-size:13px;
+  }
+  header.top .brand h1{ font-family:'Fraunces',serif; font-size:17px; font-weight:600; margin:0; letter-spacing:0.2px;}
+  header.top .brand span.tag{ font-size:11px; color:var(--graphite); font-family:'IBM Plex Mono',monospace; }
+
+  header.top .right{ display:flex; align-items:center; gap:14px; }
+  .clock{
+    font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--graphite);
+    display:flex; align-items:center; gap:6px;
+  }
+  .clock .dot{
+    width:6px; height:6px; border-radius:50%; background:var(--teal);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{ opacity:1; transform:scale(1); }
+    50%{ opacity:0.35; transform:scale(0.7); }
+  }
+  .theme-toggle{
+    width:38px; height:38px; border-radius:10px; border:1px solid var(--hairline);
+    background:var(--glass-2); color:var(--text); cursor:pointer;
+    display:grid; place-items:center; font-size:16px;
+    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  }
+  .theme-toggle:hover{ transform:rotate(-12deg); }
+  .theme-toggle .icon{ transition: opacity 0.25s ease, transform 0.35s ease; }
+
+  .credit-mini{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--graphite);
+    text-decoration:none; border-bottom:1px dashed var(--hairline);
+  }
+  .credit-mini:hover{ color:var(--amber); border-color:var(--amber); }
+
+  .app-footer{
+    padding:14px 20px 26px; text-align:center;
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--graphite);
+    border-top:1px dashed var(--hairline);
+  }
+  .app-footer a{ color:var(--teal); text-decoration:none; }
+  .app-footer a:hover{ text-decoration:underline; }
+
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55);
+    z-index:50; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal{
+    background:var(--bg); color:var(--text); border-radius:14px;
+    max-width:560px; width:100%; max-height:85vh; overflow-y:auto;
+    border:1px solid var(--hairline); box-shadow:0 30px 60px -20px rgba(0,0,0,0.5);
+  }
+  .modal-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 20px; border-bottom:1px dashed var(--hairline); position:sticky; top:0; background:var(--bg);
+  }
+  .modal-head h2{ font-family:'Fraunces',serif; font-size:19px; margin:0; }
+  .modal-close{
+    background:var(--glass-2); border:1px solid var(--hairline); color:var(--text);
+    width:30px; height:30px; border-radius:8px; cursor:pointer; font-size:14px;
+  }
+  .modal-body{ padding:18px 20px 26px; font-size:13.5px; line-height:1.6; }
+  .modal-body h3{ font-family:'Fraunces',serif; font-size:15px; margin:20px 0 6px; }
+  .modal-body .modal-sub{ color:var(--graphite); font-size:12.5px; margin:10px 0 4px; }
+  .modal-body ol{ padding-left:20px; }
+  .modal-body li{ margin-bottom:8px; }
+  .modal-body pre{
+    background:var(--glass-2); border:1px solid var(--hairline); border-radius:8px;
+    padding:12px 14px; font-family:'IBM Plex Mono',monospace; font-size:12px;
+    overflow-x:auto; white-space:pre;
+  }
+
+  .tabbar{ display:none; }
+
+  main.layout{ display:flex; height:calc(100vh - 61px); overflow:hidden; }
+  .pane{ overflow-y:auto; }
+  .pane.edit{
+    width:44%; min-width:360px; padding:22px 22px 60px;
+    border-right:2px dashed var(--hairline);
+    background:linear-gradient(180deg, var(--glass-1), transparent 200px);
+    transition: border-color 0.45s ease;
+  }
+  .pane.preview{ width:56%; padding:0; background:#0d1712; }
+
+  .field-group{ margin-bottom:22px; }
+  label.fl{
+    display:block; font-size:10.5px; font-weight:600; letter-spacing:1.6px;
+    text-transform:uppercase; color:var(--graphite); margin-bottom:7px;
+  }
+  .username-row{ display:flex; gap:8px; }
+  input[type="text"], input[type="url"]{
+    width:100%; background:var(--glass-2); border:1px solid var(--hairline);
+    border-radius:8px; padding:10px 12px; color:var(--text);
+    font-family:'IBM Plex Mono',monospace; font-size:14px; outline:none;
+    transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease;
+  }
+  input:focus{ border-color:var(--amber); }
+  button.go{
+    background:var(--amber); color:var(--dark-text); border:none; border-radius:8px;
+    padding:0 18px; font-family:'IBM Plex Mono',monospace; font-weight:600;
+    font-size:13px; cursor:pointer; white-space:nowrap;
+  }
+  button.go:disabled{ opacity:0.5; cursor:not-allowed; }
+
+  .status{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--amber); margin-top:8px; min-height:16px; }
+  .status.err{ color:var(--rust); }
+
+  /* tech stack categories */
+  .tech-cat{ margin-bottom:14px; }
+  .tech-cat summary{
+    cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.6px;
+    color:var(--teal); padding:6px 0; border-bottom:1px solid var(--hairline);
+  }
+  .tech-cat summary::-webkit-details-marker{ display:none; }
+  .tech-cat summary .count{ color:var(--graphite); font-size:10.5px; }
+  .tech-cat[open] summary .chev{ transform:rotate(90deg); }
+  .chev{ display:inline-block; transition:transform 0.15s ease; margin-right:6px; color:var(--graphite); }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:7px; padding:10px 2px 4px; }
+  .chip{
+    font-family:'IBM Plex Mono',monospace; font-size:12px;
+    padding:5px 10px 5px 6px; border-radius:16px; border:1px solid var(--hairline);
+    color:var(--text); cursor:pointer; user-select:none; background:var(--glass-1);
+    display:flex; align-items:center; gap:6px; transition:all 0.12s ease;
+  }
+  .chip:hover{ border-color:var(--teal); }
+  .chip img{ width:14px; height:14px; display:block; }
+  .chip.on{ background:var(--teal); border-color:var(--teal); color:#0d1712; font-weight:600; }
+
+  .toggle-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:9px 0; border-bottom:1px solid var(--hairline); font-size:13px;
+  }
+  .toggle-row:last-child{ border-bottom:none; }
+  .sw{ width:36px; height:20px; border-radius:12px; background:var(--glass-4); border:1px solid var(--hairline); position:relative; cursor:pointer; flex-shrink:0; }
+  .sw.on{ background:var(--teal); border-color:var(--teal); }
+  .sw::after{ content:""; position:absolute; top:1px; left:1px; width:16px; height:16px; border-radius:50%; background:var(--text); transition:left 0.15s ease; }
+  .sw.on::after{ left:18px; background:#0d1712; }
+
+  select{
+    width:100%; background:var(--glass-2); border:1px solid var(--hairline);
+    border-radius:8px; padding:9px 10px; color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:13px;
+  }
+
+  .actions{ position:sticky; bottom:0; display:flex; gap:8px; padding-top:14px; background:linear-gradient(180deg, transparent, var(--bg) 30%); }
+  .actions button{
+    flex:1; padding:11px; border-radius:8px; border:1px solid var(--hairline);
+    background:var(--glass-3); color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:12.5px; cursor:pointer;
+  }
+  .actions button.primary{ background:var(--amber); color:var(--dark-text); border-color:var(--amber); font-weight:600; }
+  .actions button:hover{ filter:brightness(1.08); }
+
+  .preview-inner{ padding:26px 30px 60px; max-width:820px; margin:0 auto; }
+  .preview-empty{ height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--graphite); text-align:center; padding:40px; }
+  .preview-empty .mono{ font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:1px; }
+  .md-body{ color:#c9d1d9; font-size:14.5px; line-height:1.65; }
+  .md-body h1{ font-family:'Fraunces',serif; font-size:26px; color:#fff; border-bottom:1px solid #30363d; padding-bottom:8px;}
+  .md-body h2,.md-body h3{ font-family:'Fraunces',serif; color:#fff; margin-top:26px; }
+  .md-body img{ max-width:100%; }
+  .md-body code{ background:rgba(255,255,255,0.08); padding:2px 5px; border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:13px;}
+  .md-body a{ color:var(--amber); text-decoration:none; }
+  .md-body ul{ padding-left:20px; }
+  .md-body hr{ border:none; border-top:1px solid #30363d; margin:20px 0; }
+  .md-body table{ border-collapse:collapse; width:100%; }
+  .md-body td,.md-body th{ border:1px solid #30363d; padding:6px 10px; }
+
+  @media (max-width:860px){
+    .tabbar{ display:flex; gap:8px; padding:10px 16px; border-bottom:1px dashed var(--hairline); position:sticky; top:0; background:var(--bg); z-index:5; }
+    .tabbar button{ flex:1; padding:9px; border-radius:8px; border:1px solid var(--hairline); background:transparent; color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:12.5px; cursor:pointer; }
+    .tabbar button.active{ background:var(--amber); color:var(--dark-text); border-color:var(--amber); font-weight:600; }
+    .clock{ display:none; }
+    .credit-mini{ display:none; }
+    main.layout{ flex-direction:column; height:auto; }
+    .pane.edit, .pane.preview{ width:100%; min-width:0; border-right:none; }
+    .pane.edit{ display:block; }
+    .pane.preview{ display:none; }
+    body.showPreview .pane.edit{ display:none; }
+    body.showPreview .pane.preview{ display:block; }
+  }
+</style>
+</head>
+<body data-theme="dark">
+
+<header class="top">
+  <div class="brand">
+    <div class="mark">R</div>
+    <div>
+      <h1>README Boarding</h1>
+      <span class="tag">profile readme generator</span>
+    </div>
+  </div>
+  <div class="right">
+    <a class="credit-mini" href="https://imdhanifa.info" target="_blank" rel="noopener">by Hanifa</a>
+    <div class="clock"><span class="dot"></span><span id="clockText">--:--:--</span></div>
+    <button class="theme-toggle" id="helpToggle" onclick="openHelp()" aria-label="How to use">
+      <span class="icon">❓</span>
+    </button>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleAppTheme()" aria-label="Toggle light/dark theme">
+      <span class="icon" id="themeIcon">🌙</span>
+    </button>
+  </div>
+</header>
+
+<div class="tabbar">
+  <button id="tabEdit" class="active" onclick="setMobileTab('edit')">Edit</button>
+  <button id="tabPreview" onclick="setMobileTab('preview')">Preview</button>
+</div>
+
+<main class="layout">
+  <section class="pane edit">
+
+    <div class="field-group">
+      <label class="fl">GitHub Username</label>
+      <div class="username-row">
+        <input type="text" id="username" placeholder="e.g. torvalds" />
+        <button class="go" id="genBtn" onclick="generate()">Generate</button>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="field-group">
+      <label class="fl">Tagline (optional)</label>
+      <input type="text" id="tagline" placeholder="Building things that ship." />
+    </div>
+
+    <div class="field-group">
+      <label class="fl">Currently Focused On (optional)</label>
+      <input type="text" id="focus" placeholder="RAG pipelines, Qdrant, Next.js" />
+    </div>
+
+    <div class="field-group">
+      <label class="fl">Website (optional)</label>
+      <input type="url" id="website" placeholder="https://yourdomain.dev" />
+    </div>
+
+    <div class="field-group">
+      <label class="fl">Contact &amp; Social</label>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <input type="text" id="email" placeholder="Email address" />
+        <input type="text" id="mobile" placeholder="Mobile / WhatsApp no." />
+        <input type="text" id="linkedin" placeholder="LinkedIn username" />
+        <input type="text" id="location" placeholder="Location, e.g. India" />
+      </div>
+      <input type="url" id="resume" placeholder="Resume / CV link (optional)" style="margin-top:10px;" />
+    </div>
+
+    <div class="field-group">
+      <label class="fl">Banner &amp; Motion</label>
+      <input type="text" id="bannerText" placeholder="Banner text (defaults to your name)" />
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+        <select id="bannerColor">
+          <option value="0:10201B,100:1B2420">Ink Gradient</option>
+          <option value="E8A33D">Amber Solid</option>
+          <option value="4FA69A">Teal Solid</option>
+          <option value="0:3A1420,100:C1502E">Sunset Gradient</option>
+        </select>
+        <select id="bannerStyle">
+          <option value="waving">Waving</option>
+          <option value="rounded">Rounded</option>
+          <option value="rect">Rectangle</option>
+          <option value="soft">Soft Wave</option>
+        </select>
+      </div>
+      <input type="text" id="typingLines" placeholder="Typing lines, comma-separated" style="margin-top:10px;"
+        value="Full-Stack Developer;Building with Next.js &amp; TypeScript;Exploring RAG and vector search" />
+    </div>
+
+    <div class="field-group">
+      <label class="fl">Tech Stack</label>
+      <div id="techCategories"></div>
+    </div>
+
+    <div class="field-group">
+      <label class="fl">Stats Provider</label>
+      <select id="statsProvider">
+        <option value="extended">GitHub Stats Extended (recommended — more stable)</option>
+        <option value="official">github-readme-stats (official, often rate-limited)</option>
+        <option value="action">Self-hosted via GitHub Action (static SVG, no rate limit)</option>
+      </select>
+    </div>
+
+    <div class="field-group">
+      <label class="fl">Stats Theme</label>
+      <select id="statsTheme">
+        <option value="dark">Dark</option>
+        <option value="radical">Radical</option>
+        <option value="tokyonight">Tokyo Night</option>
+        <option value="default">Light / Default</option>
+      </select>
+    </div>
+
+    <div class="field-group">
+      <label class="fl">Sections</label>
+      <div class="toggle-row"><span>Animated wave banner</span><div class="sw on" data-key="banner" onclick="toggleSw(this)"></div></div>
+      <div class="toggle-row"><span>Typing effect tagline</span><div class="sw on" data-key="typing" onclick="toggleSw(this)"></div></div>
+      <div class="toggle-row"><span>Contact &amp; social badges</span><div class="sw on" data-key="contact" onclick="toggleSw(this)"></div></div>
+      <div class="toggle-row"><span>GitHub stats card</span><div class="sw on" data-key="stats" onclick="toggleSw(this)"></div></div>
+      <div class="toggle-row"><span>Top languages</span><div class="sw on" data-key="langs" onclick="toggleSw(this)"></div></div>
+      <div class="toggle-row"><span>Contribution streak</span><div class="sw on" data-key="streak" onclick="toggleSw(this)"></div></div>
+      <div class="toggle-row"><span>Contribution snake animation</span><div class="sw" data-key="snake" onclick="toggleSw(this)"></div></div>
+      <div class="toggle-row"><span>Top repositories</span><div class="sw on" data-key="repos" onclick="toggleSw(this)"></div></div>
+      <div class="toggle-row"><span>Visitor badge</span><div class="sw on" data-key="visitors" onclick="toggleSw(this)"></div></div>
+      <div class="toggle-row"><span>Last-updated stamp</span><div class="sw on" data-key="updated" onclick="toggleSw(this)"></div></div>
+    </div>
+
+    <div class="actions" style="position:static; background:none; padding-top:6px;">
+      <button onclick="downloadSnakeWorkflow()">Download Snake Workflow (.yml)</button>
+      <button onclick="downloadStatsWorkflow()">Download Stats Workflow (.yml)</button>
+    </div>
+
+    <div class="actions">
+      <button onclick="copyMd()">Copy Markdown</button>
+      <button class="primary" onclick="downloadMd()">Download README.md</button>
+    </div>
+  </section>
+
+  <section class="pane preview" id="previewPane">
+    <div class="preview-empty" id="previewEmpty">
+      <div style="font-family:'Fraunces',serif; font-size:20px;">Nothing boarded yet</div>
+      <div class="mono">Enter a GitHub username and hit Generate</div>
+    </div>
+    <div class="preview-inner md-body" id="previewContent" style="display:none;"></div>
+  </section>
+</main>
+
+<footer class="app-footer">
+  Created by <a href="https://imdhanifa.info" target="_blank" rel="noopener">Hanifa</a>
+  · <a href="https://github.com/imdhanifa" target="_blank" rel="noopener">GitHub</a>
+  · <a href="#" id="linkedinLink" target="_blank" rel="noopener">LinkedIn</a>
+</footer>
+
+<div class="modal-overlay" id="helpModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>How to use this</h2>
+      <button class="modal-close" onclick="closeHelp()">✕</button>
+    </div>
+    <div class="modal-body">
+      <ol>
+        <li>Type a GitHub username above and press <strong>Generate</strong> — it pulls your real profile data and builds a README from it.</li>
+        <li>Adjust tagline, tech stack, banner, theme, and section toggles. The preview updates instantly, no re-fetch needed.</li>
+        <li><strong>Copy Markdown</strong> copies the whole file to your clipboard. <strong>Download README.md</strong> saves it locally.</li>
+      </ol>
+
+      <h3>Push it to GitHub</h3>
+      <p class="modal-sub">New profile repo (create one on GitHub first, named exactly your username):</p>
+      <pre>mkdir &lt;handle&gt; &amp;&amp; cd &lt;handle&gt;
+mv ~/Downloads/README.md .
+git init
+git add README.md
+git commit -m "docs: add profile readme"
+git branch -M main
+git remote add origin https://github.com/&lt;handle&gt;/&lt;handle&gt;.git
+git push -u origin main</pre>
+
+      <p class="modal-sub">Already have the repo cloned locally?</p>
+      <pre>cd path/to/&lt;handle&gt;
+mv ~/Downloads/README.md .
+git add README.md
+git commit -m "docs: update profile readme"
+git push</pre>
+
+      <h3>Snake / Stats workflow files</h3>
+      <p class="modal-sub">If you downloaded either workflow .yml, drop it into this path in the same repo, then commit and push:</p>
+      <pre>.github/workflows/generate-snake.yml
+.github/workflows/generate-readme-stats.yml</pre>
+      <p class="modal-sub">Then open the <strong>Actions</strong> tab on the repo to confirm it ran — or trigger it manually with "Run workflow" if it hasn't fired yet.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- app theme: auto-set by local time, animated toggle, live clock ----
+function applyAppTheme(theme){
+  document.body.setAttribute('data-theme', theme);
+  document.getElementById('themeIcon').textContent = theme === 'dark' ? '🌙' : '☀️';
+}
+function toggleAppTheme(){
+  const current = document.body.getAttribute('data-theme');
+  applyAppTheme(current === 'dark' ? 'light' : 'dark');
+}
+(function initTheme(){
+  const hour = new Date().getHours();
+  const autoDark = (hour >= 19 || hour < 7); // 7pm–7am -> dark by default
+  applyAppTheme(autoDark ? 'dark' : 'light');
+})();
+function tickClock(){
+  const el = document.getElementById('clockText');
+  if(el) el.textContent = new Date().toLocaleTimeString([], { hour12:false });
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+function openHelp(){ document.getElementById('helpModal').classList.add('open'); }
+function closeHelp(){ document.getElementById('helpModal').classList.remove('open'); }
+document.getElementById('helpModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'helpModal') closeHelp();
+});
+
+// LinkedIn profile
+document.getElementById('linkedinLink').href = 'https://linkedin.com/in/imdhanifa';
+
+// ---- categorized tech stack, each with a simple-icons slug ----
+const TECH_CATEGORIES = {
+  "Frontend": [
+    ["JavaScript","javascript"], ["TypeScript","typescript"], ["React","react"],
+    ["Next.js","nextdotjs"], ["Vue.js","vuedotjs"], ["Tailwind CSS","tailwindcss"],
+    ["HTML5","html5"], ["CSS3","css3"]
+  ],
+  "Backend / Full-stack": [
+    ["Node.js","nodedotjs"], ["ASP.NET Core",".NET"===".NET"?"dotnet":"dotnet"], [".NET","dotnet"],
+    ["Java","java"], ["Spring","spring"], ["Python","python"], ["Django","django"],
+    ["FastAPI","fastapi"], ["PHP","php"], ["Go","go"], ["C#","csharp"]
+  ],
+  "AI / ML": [
+    ["TensorFlow","tensorflow"], ["PyTorch","pytorch"], ["OpenAI","openai"],
+    ["scikit-learn","scikitlearn"], ["Pandas","pandas"], ["NumPy","numpy"], ["Jupyter","jupyter"]
+  ],
+  "Database": [
+    ["PostgreSQL","postgresql"], ["MongoDB","mongodb"], ["MySQL","mysql"],
+    ["Redis","redis"], ["Qdrant","qdrant"]
+  ],
+  "DevOps / Tools": [
+    ["Docker","docker"], ["Git","git"], ["GitHub Actions","githubactions"],
+    ["Kubernetes","kubernetes"], ["Nginx","nginx"], ["Amazon AWS","amazonaws"], ["Linux","linux"]
+  ]
+};
+// de-dupe ASP.NET Core mistake above
+TECH_CATEGORIES["Backend / Full-stack"] = [
+  ["Node.js","nodedotjs"], ["ASP.NET Core","dotnet"], ["Java","java"], ["Spring","spring"],
+  ["Python","python"], ["Django","django"], ["FastAPI","fastapi"], ["PHP","php"],
+  ["Go","go"], ["C#","csharp"]
+];
+
+let selectedTech = new Set(["TypeScript","Next.js","Tailwind CSS","Node.js",".NET","Python"]);
+let sections = { banner:true, typing:true, contact:true, stats:true, langs:true, streak:true, snake:false, repos:true, visitors:true, updated:true };
+let lastMarkdown = "";
+let lastUsername = "";
+let cachedUser = null;
+let cachedRepos = [];
+let cachedRepoFetchFailed = false;
+const slugOf = {};
+
+// live text fields trigger a markdown rebuild from cached data (no re-fetch)
+["tagline","focus","website","email","mobile","linkedin","location","resume","bannerText","typingLines"].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', ()=>{ if(cachedUser) rebuildFromCache(); });
+});
+["bannerColor","bannerStyle"].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('change', ()=>{ if(cachedUser) rebuildFromCache(); });
+});
+
+const catWrap = document.getElementById('techCategories');
+Object.entries(TECH_CATEGORIES).forEach(([cat, items], idx)=>{
+  const details = document.createElement('details');
+  details.className = 'tech-cat';
+  if(idx < 2) details.open = true;
+  const summary = document.createElement('summary');
+  summary.innerHTML = `<span><span class="chev">&#9656;</span>${cat}</span><span class="count">${items.length}</span>`;
+  details.appendChild(summary);
+
+  const row = document.createElement('div');
+  row.className = 'chip-row';
+  items.forEach(([label, slug])=>{
+    slugOf[label] = slug;
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (selectedTech.has(label) ? ' on' : '');
+    chip.innerHTML = `<img src="https://cdn.simpleicons.org/${slug}/${selectedTech.has(label)?'10201B':'ECE7D8'}" onerror="this.style.display='none'" /><span>${label}</span>`;
+    chip.onclick = ()=>{
+      const on = selectedTech.has(label);
+      if(on){ selectedTech.delete(label); }
+      else { selectedTech.add(label); }
+      chip.classList.toggle('on');
+      const img = chip.querySelector('img');
+      if(img) img.src = `https://cdn.simpleicons.org/${slug}/${!on?'10201B':'ECE7D8'}`;
+      if(cachedUser) rebuildFromCache();
+    };
+    row.appendChild(chip);
+  });
+  details.appendChild(row);
+  catWrap.appendChild(details);
+});
+
+function toggleSw(el){
+  const key = el.dataset.key;
+  sections[key] = !sections[key];
+  el.classList.toggle('on');
+  if(cachedUser) rebuildFromCache();
+}
+
+document.getElementById('statsTheme').addEventListener('change', ()=>{ if(cachedUser) rebuildFromCache(); });
+document.getElementById('statsProvider').addEventListener('change', ()=>{ if(cachedUser) rebuildFromCache(); });
+document.getElementById('username').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') generate(); });
+
+function rebuildFromCache(){
+  const md = buildMarkdown(cachedUser, cachedRepos, lastUsername);
+  lastMarkdown = md;
+  renderPreview(md);
+}
+
+function setMobileTab(which){
+  document.body.classList.toggle('showPreview', which === 'preview');
+  document.getElementById('tabEdit').classList.toggle('active', which==='edit');
+  document.getElementById('tabPreview').classList.toggle('active', which==='preview');
+}
+
+function badgeRow(){
+  return [...selectedTech].map(t=>{
+    const slug = slugOf[t] || t.toLowerCase().replace(/[^a-z0-9]/g,'');
+    const label = encodeURIComponent(t);
+    return `![${t}](https://img.shields.io/badge/${label}-10201B?style=for-the-badge&logo=${slug}&logoColor=E8A33D)`;
+  }).join(' ');
+}
+
+async function generate(silent){
+  const uname = document.getElementById('username').value.trim();
+  const statusEl = document.getElementById('status');
+  const btn = document.getElementById('genBtn');
+
+  if(!uname){
+    statusEl.textContent = 'Enter a username first.';
+    statusEl.className = 'status err';
+    return;
+  }
+
+  if(!silent){
+    statusEl.textContent = 'Boarding...';
+    statusEl.className = 'status';
+    btn.disabled = true;
+  }
+
+  try{
+    const userRes = await fetch(`https://api.github.com/users/${encodeURIComponent(uname)}`);
+    if(userRes.status === 404){
+      statusEl.textContent = 'NOT FOUND — check the handle and try again.';
+      statusEl.className = 'status err';
+      btn.disabled = false;
+      return;
+    }
+    if(!userRes.ok){
+      statusEl.textContent = `GitHub API error (${userRes.status}). Rate limit may be exceeded.`;
+      statusEl.className = 'status err';
+      btn.disabled = false;
+      return;
+    }
+    const user = await userRes.json();
+
+    // FIX: GitHub's API only accepts sort=created|updated|pushed|full_name here.
+    // stargazers_count is NOT a valid sort value and was causing a 422, silently
+    // dropping the whole repos list (and every star count with it). We fetch
+    // with a valid sort and rank by stars ourselves on the client instead.
+    let repos = [];
+    let repoFetchFailed = false;
+    try{
+      const repoRes = await fetch(`https://api.github.com/users/${encodeURIComponent(uname)}/repos?sort=updated&direction=desc&per_page=100`);
+      if(repoRes.ok){
+        const all = await repoRes.json();
+        repos = all.filter(r=>!r.fork).sort((a,b)=>b.stargazers_count-a.stargazers_count).slice(0,4);
+      } else {
+        repoFetchFailed = true;
+      }
+    }catch(e){ repoFetchFailed = true; }
+
+    lastUsername = uname;
+    cachedUser = user;
+    cachedRepos = repos;
+    cachedRepoFetchFailed = repoFetchFailed;
+
+    const md = buildMarkdown(user, repos, uname);
+    lastMarkdown = md;
+    renderPreview(md);
+
+    if(!silent){
+      const totalStars = repos.reduce((s,r)=>s+r.stargazers_count,0);
+      statusEl.textContent = repoFetchFailed
+        ? `Boarded @${uname} — repo/star data unavailable (rate limit or network).`
+        : `Boarded @${uname} · ${user.public_repos} repos · ${totalStars} stars on top repos · ${user.followers} followers`;
+      statusEl.className = repoFetchFailed ? 'status err' : 'status';
+    }
+  }catch(err){
+    statusEl.textContent = 'Network error — check connection and retry.';
+    statusEl.className = 'status err';
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+function buildMarkdown(user, repos, uname){
+  const tagline = document.getElementById('tagline').value.trim();
+  const focus = document.getElementById('focus').value.trim();
+  const website = document.getElementById('website').value.trim();
+  const theme = document.getElementById('statsTheme').value;
+  const name = user.name || uname;
+
+  let md = '';
+
+  if(sections.banner){
+    const bannerText = (document.getElementById('bannerText').value.trim() || `Hi, I'm ${name}`);
+    const color = document.getElementById('bannerColor').value;
+    const style = document.getElementById('bannerStyle').value;
+    md += `![Banner](https://capsule-render.vercel.app/api?type=${style}&color=${encodeURIComponent(color)}&height=180&section=header&text=${encodeURIComponent(bannerText)}&fontAlign=50&fontAlignY=40&fontColor=E8A33D&fontSize=36)\n\n`;
+  }
+
+  md += `# Hi, I'm ${name} 👋\n\n`;
+
+  if(sections.typing){
+    const lines = document.getElementById('typingLines').value.split(';').map(s=>s.trim()).filter(Boolean);
+    if(lines.length){
+      const linesParam = lines.map(l=>encodeURIComponent(l)).join(';');
+      md += `[![Typing SVG](https://readme-typing-svg.demolab.com?font=IBM+Plex+Mono&size=20&pause=1200&color=E8A33D&center=true&vCenter=true&width=560&lines=${linesParam})](https://git.io/typing-svg)\n\n`;
+    }
+  } else if(tagline){
+    md += `${tagline}\n\n`;
+  }
+
+  if(user.bio) md += `${user.bio}\n\n`;
+  if(focus) md += `**Currently focused on:** ${focus}\n\n`;
+
+  const links = [];
+  if(website) links.push(`[Website](${website})`);
+  if(user.blog && user.blog !== website) links.push(`[Blog](${user.blog})`);
+  if(user.twitter_username) links.push(`[Twitter](https://twitter.com/${user.twitter_username})`);
+  if(links.length) md += links.join(' · ') + '\n\n';
+
+  if(sections.contact){
+    const email = document.getElementById('email').value.trim();
+    const mobile = document.getElementById('mobile').value.trim();
+    const linkedin = document.getElementById('linkedin').value.trim();
+    const location = document.getElementById('location').value.trim();
+    const resume = document.getElementById('resume').value.trim();
+
+    const badges = [];
+    if(email){
+      badges.push(`[![Email](https://img.shields.io/badge/-Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:${email})`);
+    }
+    if(mobile){
+      const digits = mobile.replace(/[^\d+]/g,'');
+      badges.push(`[![WhatsApp](https://img.shields.io/badge/-Chat%20on%20WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/${digits.replace('+','')})`);
+    }
+    if(linkedin){
+      const handle = linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//i,'').replace(/\/$/,'');
+      badges.push(`[![LinkedIn](https://img.shields.io/badge/-LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/${handle})`);
+    }
+    if(resume){
+      badges.push(`[![Resume](https://img.shields.io/badge/-Resume-10201B?style=for-the-badge&logo=readdotcv&logoColor=E8A33D)](${resume})`);
+    }
+    if(location){
+      badges.push(`![Location](https://img.shields.io/badge/-${encodeURIComponent(location)}-10201B?style=for-the-badge&logo=googlemaps&logoColor=E8A33D)`);
+    }
+    if(badges.length){
+      md += `## Connect with me\n\n${badges.join(' ')}\n\n`;
+    }
+  }
+
+  if(selectedTech.size){
+    md += `## Tech Stack\n\n${badgeRow()}\n\n`;
+  }
+
+  if(sections.stats || sections.langs || sections.streak){
+    md += `## GitHub Stats\n\n`;
+    const provider = document.getElementById('statsProvider').value;
+    const base = provider === 'official' ? 'https://github-readme-stats.vercel.app'
+               : provider === 'extended' ? 'https://github-stats-extended.vercel.app'
+               : null; // 'action' -> relative local files
+
+    if(provider === 'action'){
+      if(sections.stats) md += `![Stats](./profile/stats.svg)\n\n`;
+      if(sections.langs) md += `![Top Langs](./profile/top-langs.svg)\n\n`;
+      md += `<sub>Stats generated by a scheduled GitHub Action — see the workflow file for setup.</sub>\n\n`;
+    } else {
+      if(sections.stats){
+        md += `![${uname}'s GitHub stats](${base}/api?username=${uname}&show_icons=true&theme=${theme}&hide_border=true)\n\n`;
+      }
+      if(sections.langs){
+        md += `![Top Langs](${base}/api/top-langs/?username=${uname}&layout=compact&theme=${theme}&hide_border=true)\n\n`;
+      }
+    }
+    if(sections.streak){
+      md += `![${uname}'s streak](https://streak-stats.demolab.com?user=${uname}&theme=${theme}&hide_border=true)\n\n`;
+    }
+  }
+
+  if(sections.repos){
+    const totalStars = repos.reduce((s,r)=>s+r.stargazers_count,0);
+    md += `## Top Repositories${repos.length ? ` (⭐ ${totalStars} total)` : ''}\n\n`;
+    if(repos.length){
+      repos.forEach(r=>{
+        const desc = r.description ? ` — ${r.description}` : '';
+        md += `- **[${r.name}](${r.html_url})**${desc} \`★ ${r.stargazers_count}\`${r.language ? ` \`${r.language}\`` : ''}\n`;
+      });
+    } else {
+      md += `_No public repositories found for this account._\n`;
+    }
+    md += `\n`;
+  }
+
+  if(sections.snake){
+    md += `## Contribution Snake\n\n`;
+    md += `<!-- Requires the GitHub Action below, running once against this repo -->\n\n`;
+    md += `![snake gif](https://raw.githubusercontent.com/${uname}/${uname}/output/github-contribution-grid-snake-dark.svg#gh-dark-mode-only)\n`;
+    md += `![snake gif](https://raw.githubusercontent.com/${uname}/${uname}/output/github-contribution-grid-snake.svg#gh-light-mode-only)\n\n`;
+  }
+
+  if(sections.visitors){
+    md += `---\n\n![Profile views](https://komarev.com/ghpvc/?username=${uname}&color=E8A33D&style=flat)\n`;
+  }
+
+  if(sections.updated){
+    const today = new Date().toISOString().slice(0,10);
+    md += `\n<sub>Last updated: ${today}</sub>\n`;
+  }
+
+  return md;
+}
+
+function renderPreview(md){
+  document.getElementById('previewEmpty').style.display = 'none';
+  const el = document.getElementById('previewContent');
+  el.style.display = 'block';
+  el.innerHTML = marked.parse(md);
+  setMobileTab('preview');
+
+  // In-app only: flag images that fail to load so it's obvious which
+  // service is down, rather than leaving a silent broken-image icon.
+  // This does NOT alter the exported/copied markdown in any way.
+  el.querySelectorAll('img').forEach(img=>{
+    img.addEventListener('error', function handler(){
+      if(this.dataset.failed) return;
+      this.dataset.failed = '1';
+      const note = document.createElement('div');
+      note.style.cssText = 'display:inline-block;padding:8px 12px;border:1px dashed var(--rust);border-radius:6px;color:var(--rust);font-family:IBM Plex Mono,monospace;font-size:11.5px;margin:4px 0;';
+      note.textContent = '⚠ image failed to load — the source service may be rate-limited or down';
+      this.replaceWith(note);
+    }, { once:true });
+  });
+}
+
+function copyMd(){
+  if(!lastMarkdown) return;
+  navigator.clipboard.writeText(lastMarkdown).then(()=>{
+    const s = document.getElementById('status');
+    s.textContent = 'Copied to clipboard.';
+    s.className = 'status';
+  });
+}
+
+function downloadMd(){
+  if(!lastMarkdown) return;
+  const blob = new Blob([lastMarkdown], {type:'text/markdown'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'README.md';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadStatsWorkflow(){
+  const theme = document.getElementById('statsTheme').value;
+  const yml = `name: generate-readme-stats
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"   # every 12 hours
+  workflow_dispatch: {}
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate stats card
+        uses: stats-organization/github-readme-stats-action@main
+        with:
+          card: stats
+          options: "theme=${theme}&hide_border=true&show_icons=true"
+          path: profile/stats.svg
+          token: \${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate top-langs card
+        uses: stats-organization/github-readme-stats-action@main
+        with:
+          card: top-langs
+          options: "theme=${theme}&hide_border=true&layout=compact"
+          path: profile/top-langs.svg
+          token: \${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit generated cards
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: refresh readme stats cards"
+          file_pattern: profile/*.svg
+`;
+  const blob = new Blob([yml], {type:'text/yaml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'generate-readme-stats.yml';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadSnakeWorkflow(){
+  const yml = `name: generate-snake
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # every 6 hours
+  workflow_dispatch: {}
+  push:
+    branches: [ main ]
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate snake animation
+        uses: Platane/snk@v3
+        with:
+          github_user_name: \${{ github.repository_owner }}
+          outputs: |
+            dist/github-contribution-grid-snake.svg
+            dist/github-contribution-grid-snake-dark.svg?palette=github-dark
+
+      - name: Push snake to output branch
+        uses: crazy-max/ghaction-github-pages@v4
+        with:
+          target_branch: output
+          build_dir: dist
+        env:
+          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+`;
+  const blob = new Blob([yml], {type:'text/yaml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'generate-snake.yml';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
