@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Profile Craft — Profile README Generator</title>
-<meta name="description" content="Generate a polished GitHub profile README from your handle — live stats, tech badges, typing effects, and contribution snake animation, previewed instantly.">
+<meta name="description" content="Generate a polished GitHub profile README from your handle — live stats, Github ReadMe generator, ReadMe generator, MD generator, tech badges, typing effects, and contribution snake animation, previewed instantly.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
@@ -638,7 +638,7 @@ function buildMarkdown(user, repos, uname){
     md += `![Banner](https://capsule-render.vercel.app/api?type=${style}&color=${encodeURIComponent(color)}&height=180&section=header&text=${encodeURIComponent(bannerText)}&fontAlign=50&fontAlignY=40&fontColor=E8A33D&fontSize=36)\n\n`;
   }
 
-  md += `# Hi, I'm ${name} 👋\n\n`;
+  md += `# Hey there, I'm ${name} 👋\n\n`;
 
   if(sections.typing){
     const lines = document.getElementById('typingLines').value.split(';').map(s=>s.trim()).filter(Boolean);
